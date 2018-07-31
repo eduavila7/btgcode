@@ -31,7 +31,8 @@ class OracleServiceTests : TestDependencyInjectionBase() {
             underlyingStock = COMPANY_STOCK_1,
             issuer = MEGA_CORP,
             owner = MEGA_CORP,
-            optionType = OptionType.PUT
+            optionType = OptionType.PUT,
+            optionStyle = OptionStyle.European
     )
 
     @Before

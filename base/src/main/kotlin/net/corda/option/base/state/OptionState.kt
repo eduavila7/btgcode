@@ -5,6 +5,7 @@ import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 import net.corda.option.base.OptionType
+import net.corda.option.base.OptionStyle
 import net.corda.option.base.RISK_FREE_RATE
 import net.corda.option.base.Volatility
 import net.corda.option.base.pricingmodel.BlackScholes
@@ -30,6 +31,7 @@ data class OptionState(
         val issuer: Party,
         val owner: Party,
         val optionType: OptionType,
+        val optionStyle: OptionStyle,
         var spotPriceAtPurchase: Amount<Currency> = Amount(0, strikePrice.token),
         val exercised: Boolean = false,
         val exercisedOnDate: Instant? = null,

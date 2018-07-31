@@ -8,6 +8,7 @@ import net.corda.core.messaging.startFlow
 import net.corda.core.messaging.vaultQueryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.finance.contracts.getCashBalances
+import net.corda.option.base.OptionStyle
 import net.corda.option.base.OptionType
 import net.corda.option.base.state.OptionState
 import net.corda.option.client.flow.OptionExerciseFlow
@@ -66,11 +67,7 @@ class OptionApi(val rpcOps: CordaRPCOps) {
     @Path("stocks")
     @Produces(MediaType.APPLICATION_JSON)
     fun getStocks() = mapOf("stocks" to listOf(
-            "The Carlsbad National Bank",
-            "Wilburton State Bank",
-            "De Soto State Bank",
-            "Florida Traditions Bank",
-            "CorEast Federal Savings Bank")
+            "USD")
     )
 
     /**
@@ -99,12 +96,14 @@ class OptionApi(val rpcOps: CordaRPCOps) {
                     @QueryParam(value = "expiry") expiry: String,
                     @QueryParam(value = "underlying") underlying: String,
                     @QueryParam(value = "issuer") issuerName: CordaX500Name,
+                    @QueryParam(value = "optionStyle") optionStyle: String,
                     @QueryParam(value = "optionType") optionType: String): Response {
 
         // We construct the option to be issued.
         val issuer = rpcOps.wellKnownPartyFromX500Name(issuerName) ?: throw IllegalArgumentException("Unknown issuer.")
         val expiryDate = LocalDate.parse(expiry).atStartOfDay().toInstant(ZoneOffset.UTC)
         val type = if (optionType == "CALL") OptionType.CALL else OptionType.PUT
+        val style = if (optionStyle == "American") OptionStyle.American else OptionStyle.European
         val strikePrice = Amount(strike.toLong() * 100, Currency.getInstance(currency))
         val optionToIssue = OptionState(
                 strikePrice = strikePrice,
@@ -112,7 +111,8 @@ class OptionApi(val rpcOps: CordaRPCOps) {
                 underlyingStock = underlying,
                 issuer = issuer,
                 owner = me,
-                optionType = type)
+                optionType = type,
+                optionStyle = style)
 
         // We issue the option onto the ledger.
         return try {
