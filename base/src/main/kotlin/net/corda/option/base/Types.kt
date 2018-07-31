@@ -16,9 +16,3 @@ data class Volatility(val stock: String, val atTime: Instant, val value: Double)
 /** Represents a stock at a given point in time. */
 @CordaSerializable
 enum class OptionType { CALL, PUT }
-
-/** Representa o estilo da opcao. */
-@CordaSerializable
-enum class OptionStyle { American, European }
-
-

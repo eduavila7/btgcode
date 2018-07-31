@@ -4,7 +4,6 @@ import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.utils.sumCashBy
-import net.corda.option.base.OptionStyle
 import net.corda.option.base.SpotPrice
 import net.corda.option.base.Volatility
 import net.corda.option.base.state.OptionState
@@ -91,12 +90,15 @@ open class OptionContract : Contract {
                     val timeWindow = tx.timeWindow!!
                     val premium = OptionState.calculatePremium(outputOption, oracleCmd.value.volatility)
 
+                    "The input option was already exercised" using (!inputOption.exercised)
                     "The owner has changed" using (inputOption.owner != outputOption.owner)
                     "The spot price at purchase matches the oracle's data" using
                             (outputOption.spotPriceAtPurchase == oracleCmd.value.spotPrice.value)
                     "The options are otherwise identical" using
                             (inputOption == outputOption.copy(owner = inputOption.owner, spotPriceAtPurchase = inputOption.spotPriceAtPurchase))
 
+                    "The option is being traded before maturity" using
+                            (tx.timeWindow!!.untilTime!! <= inputOption.expiryDate)
                     "The amount of cash transferred matches the premium" using
                             (premium == cashTransferredToOldOwner.withoutIssuer())
 
@@ -130,16 +132,8 @@ open class OptionContract : Contract {
                     "The options are otherwise identical" using
                             (input == output.copy(exercised = false, exercisedOnDate = null))
 
-
-
-                    //condicional para determinar regra de exercicio baseado no estilo da opcao (americana, europeia)
-                    if (input.optionStyle == OptionStyle.American) {
-                        "The option is being exercised on maturity" using
-                                (input.expiryDate <= tx.timeWindow!!.untilTime!!)
-                    } else {
-                        "The option is being exercised before maturity" using
-                                (input.expiryDate == tx.timeWindow!!.untilTime!!)
-                    }
+                    "The option is being exercised before maturity" using
+                            (tx.timeWindow!!.untilTime!! <= input.expiryDate)
                     "The output option's exercise data is within the time-window" using
                             (output.exercisedOnDate!! in timeWindow)
                     "The time-window is no longer than 120 seconds" using
